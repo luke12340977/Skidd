@@ -1,0 +1,96 @@
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
+
+plugins {
+    id 'fabric-loom' version '1.17.12'
+}
+
+version = project.mod_version
+group = project.maven_group
+base.archivesName = project.archives_base_name
+
+// Both uploads contain decompiler-renamed, Yarn/named jars, not compilable
+// source projects. Loom needs the *same* mappings used to produce those jars.
+// Its local mappings dependency must be a jar with mappings/mappings.tiny.
+def preparedDir = layout.buildDirectory.dir('prepared').get().asFile
+def mappingsJar = new File(preparedDir, 'zelith-mappings.jar')
+if (!mappingsJar.exists() || mappingsJar.lastModified() < file('Zelith-renamed-decompiled.zip').lastModified()) {
+    preparedDir.mkdirs()
+    new ZipFile(file('Zelith-renamed-decompiled.zip')).withCloseable { archive ->
+        def entry = archive.getEntry('mappings-used.tiny')
+        if (entry == null) throw new GradleException('Zelith mappings are missing from the uploaded ZIP')
+        new ZipOutputStream(mappingsJar.newOutputStream()).withCloseable { out ->
+            out.putNextEntry(new ZipEntry('mappings/mappings.tiny'))
+            archive.getInputStream(entry).withCloseable { input -> input.transferTo(out) }
+            out.closeEntry()
+        }
+    }
+}
+
+def zelithJar = new File(preparedDir, 'zelith-named.jar')
+def asyncJar = new File(preparedDir, 'async-named.jar')
+def generatedDir = new File(preparedDir, 'generated')
+def generatedModules = ['Module_AsyncLocator.class', 'Module_InstaPearlCatch.class',
+                        'Module_STrigger.class', 'Module_Aimbot.class']
+    .collect { new File(generatedDir, it) }
+def python = providers.gradleProperty('pythonExecutable').orElse('python3').get()
+def prepareArchives = tasks.register('prepareArchives', Exec) {
+    inputs.files('Zelith-renamed-decompiled.zip', 'async-locator-1.0.3-fabric-loader-0.18-decompiled.zip',
+                 'tools/prepare_archives.py', 'tools/generate_module.py')
+    outputs.files(zelithJar, asyncJar, generatedModules)
+    workingDir projectDir
+    commandLine python, 'tools/prepare_archives.py', '--output', preparedDir.absolutePath
+}
+
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings files(mappingsJar)
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+    // The five original Async mixins are compiled again so Loom can remap
+    // their Minecraft targets. Our Combat modules are generated against the
+    // repaired Zelith binary API, which Java source cannot represent.
+    compileOnly files(asyncJar)
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn prepareArchives
+    options.release = 21
+}
+
+tasks.named('processResources', ProcessResources) {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') { expand version: project.version }
+}
+
+tasks.named('jar', Jar) {
+    dependsOn prepareArchives
+    // Both archives contain an assets/ directory entry, but no overlapping
+    // files after the exclusions below.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // Make ONE Fabric mod: keep Zelith's assets/refmap and Async's algorithm,
+    // but replace both old manifests and the Async mixins that we compile from
+    // source (so Loom can statically remap their Minecraft targets).
+    from({ zipTree(zelithJar) }) {
+        exclude 'META-INF/**', 'fabric.mod.json'
+    }
+    from({ zipTree(asyncJar) }) {
+        exclude 'META-INF/**', 'fabric.mod.json',
+                'async-locator.mixins.json', 'async-locator.client.mixins.json',
+                'brightspark/asynclocator/asynclocatormodfabric/client/mixin/*.class'
+    }
+    from(generatedDir)
+}

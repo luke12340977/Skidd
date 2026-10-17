@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "zelith",
+  "version": "${version}",
+  "name": "Zelith Client + Combat Helpers",
+  "description": "Zelith with Async Locator, Insta Pearl Catch, S Trigger, smooth Aimbot and event-based GUI key binding.",
+  "authors": ["Zelith authors", "Async Locator authors"],
+  "license": "See the original mod licenses and LICENSE_async-locator",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.zelith.ZelithClient",
+      "brightspark.asynclocator.asynclocatormodfabric.client.AsyncLocatorClient",
+      "com.zelith.integration.FastPearlCatch"
+    ]
+  },
+  "mixins": [
+    "zelith.mixins.json",
+    "async-locator.client.mixins.json",
+    "zelith-integration.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

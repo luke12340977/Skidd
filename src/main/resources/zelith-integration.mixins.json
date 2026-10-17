@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.zelith.integration.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "RegistryMixin",
+    "ActivationBindMixin",
+    "AsyncLocatorGateMixin",
+    "ClickGuiBindMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

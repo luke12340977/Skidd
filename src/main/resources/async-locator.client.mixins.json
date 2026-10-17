@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "brightspark.asynclocator.asynclocatormodfabric.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "InputMoveAccessor",
+    "InteractMixin",
+    "KbInputMixin",
+    "McMixin",
+    "SlotSync"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
