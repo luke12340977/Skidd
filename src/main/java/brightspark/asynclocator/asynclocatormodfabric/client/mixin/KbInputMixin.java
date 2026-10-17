@@ -22,7 +22,10 @@ public abstract class KbInputMixin {
    )
    private void al$fix(CallbackInfo ci) {
       if (SilentRot.moving()) {
-         Input self = (Input)this;
+         // Mixin merges this class into KeyboardInput, which extends Input.
+         // The intermediate Object cast is needed when javac checks this
+         // mixin source before transformation.
+         Input self = (Input)(Object)this;
          Vec2f in = self.getMovementInput();
          float fwd = in.y;
          float side = in.x;

@@ -107,7 +107,7 @@ public final class Aimbot {
             lastWorld = client.world;
         }
         if (!player.isAlive() || player.isSpectator() || SilentRot.on()
-                || (holdAttack() && !client.options.attackKey.isPressed())) {
+                || (booleanSetting(holdAttackMethod) && !client.options.attackKey.isPressed())) {
             lockedTarget = null;
             return;
         }
