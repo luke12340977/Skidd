@@ -10,6 +10,13 @@ version = project.mod_version
 group = project.maven_group
 base.archivesName = project.archives_base_name
 
+// The uploaded binaries, their Tiny mappings, mixin signatures and the merged
+// Fabric metadata all target 1.21.11. Never produce a mislabeled JAR by merely
+// overriding minecraft_version: a full source/binary API port is required.
+if (project.minecraft_version != '1.21.11') {
+    throw new GradleException("The complete Zelith + Async Locator integration is only ported to Minecraft 1.21.11; ${project.minecraft_version} requires a full binary/source port, not a version override. See PORTING-1.21.4.md.")
+}
+
 // Both uploads contain decompiler-renamed, Yarn/named jars, not compilable
 // source projects. Loom needs the *same* mappings used to produce those jars.
 // Its local mappings dependency must be a jar with mappings/mappings.tiny.

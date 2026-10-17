@@ -231,6 +231,9 @@ class ArchiveTests(unittest.TestCase):
     def test_resource_registration_is_consistent(self):
         resources = ROOT / "src" / "main" / "resources"
         mod = json.loads((resources / "fabric.mod.json").read_text())
+        properties = (ROOT / "gradle.properties").read_text()
+        game_version = re.search(r"^minecraft_version=(.+)$", properties, re.MULTILINE).group(1)
+        self.assertEqual(mod["depends"]["minecraft"], "~" + game_version)
         self.assertEqual(mod["id"], "zelith")
         self.assertEqual(len(mod["entrypoints"]["client"]), 3)
         self.assertIn("com.zelith.integration.FastPearlCatch", mod["entrypoints"]["client"])

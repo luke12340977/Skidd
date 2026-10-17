@@ -1,5 +1,7 @@
 # Zelith Combat integration (Fabric 1.21.11)
 
+**Minecraft 1.21.4 is not yet supported.** The complete port requested for that version is tracked in [PORTING-1.21.4.md](PORTING-1.21.4.md). The artifact and instructions below are for **1.21.11 only**; do not install that JAR on 1.21.4 or change the version numbers to label it as compatible.
+
 This project builds **one** Fabric mod from the two uploaded decompiler archives. The decompiled Java is not buildable as-is (the decompiler renamed classes without updating their type descriptors, and emitted Java-illegal overloads). `tools/prepare_archives.py` repairs the supplied Zelith class files without executing them and generates four small Combat module adapters against that bytecode-only API. Gradle/Loom bundles the original algorithms, compiles the readable integration/mixins, and remaps the combined JAR for Fabric.
 
 ## Build
@@ -51,6 +53,6 @@ The GUI's bind rows now use actual keyboard events instead of polling undefined 
 python3 -m unittest discover -s tests -v
 ```
 
-These tests verify the repaired class descriptors, all four generated Combat modules, binary entrypoints, integration targets and output reproducibility. **A Minecraft runtime smoke test and a full Gradle build have not been run in this sandbox**: it has no JDK/Gradle distribution or access to the Fabric/Mojang Maven hosts. Build and test the output in a Fabric 1.21.11 installation before relying on it; if an in-game crash remains, supply the `latest.log` and crash report.
+These tests verify the repaired class descriptors, all four generated Combat modules, binary entrypoints, integration targets and output reproducibility. **A full 1.21.11 Gradle build passed in GitHub Actions** ([successful run and artifact](https://github.com/luke12340977/Skidd/actions/runs/39011995625)); the sandbox cannot download its JAR from GitHub's separate artifact-storage host. Download the `zelith-combat-integrated` artifact from that run in a browser if needed. **No Minecraft runtime smoke test or 1.21.4 build has passed.** Test the 1.21.11 output in-game before relying on it; if it crashes, supply `latest.log` and the crash report.
 
 The Async Locator upload declares **All Rights Reserved** and includes `LICENSE_async-locator`. Do not redistribute a combined build unless you have permission from its rights holder. The build uses only the two files supplied in this repository; it does not download third-party mod binaries.
