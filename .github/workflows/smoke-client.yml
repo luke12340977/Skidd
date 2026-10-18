@@ -1,6 +1,9 @@
 name: Smoke test Minecraft client
 
 on:
+  push:
+    branches:
+      - arena/fadd62fc-skidd
   workflow_dispatch:
 
 permissions:
