@@ -1,6 +1,6 @@
 # Zelith Combat integration (Fabric 1.21.11)
 
-**Minecraft 1.21.4 is not yet supported.** The complete port requested for that version is tracked in [PORTING-1.21.4.md](PORTING-1.21.4.md). The artifact and instructions below are for **1.21.11 only**; do not install that JAR on 1.21.4 or change the version numbers to label it as compatible.
+**Target: Minecraft 1.21.11 with Fabric.** The original Zelith and Async Locator archives, build dependencies, merged mod metadata, and compiled artifact all target 1.21.11.
 
 This project builds **one** Fabric mod from the two uploaded decompiler archives. The decompiled Java is not buildable as-is (the decompiler renamed classes without updating their type descriptors, and emitted Java-illegal overloads). `tools/prepare_archives.py` repairs the supplied Zelith class files without executing them and generates four small Combat module adapters against that bytecode-only API. Gradle/Loom bundles the original algorithms, compiles the readable integration/mixins, and remaps the combined JAR for Fabric.
 

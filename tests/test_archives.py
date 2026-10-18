@@ -233,7 +233,10 @@ class ArchiveTests(unittest.TestCase):
         mod = json.loads((resources / "fabric.mod.json").read_text())
         properties = (ROOT / "gradle.properties").read_text()
         game_version = re.search(r"^minecraft_version=(.+)$", properties, re.MULTILINE).group(1)
+        self.assertEqual(game_version, "1.21.11")
         self.assertEqual(mod["depends"]["minecraft"], "~" + game_version)
+        fabric_api = re.search(r"^fabric_api_version=(.+)$", properties, re.MULTILINE).group(1)
+        self.assertTrue(fabric_api.endswith("+" + game_version), fabric_api)
         self.assertEqual(mod["id"], "zelith")
         self.assertEqual(len(mod["entrypoints"]["client"]), 3)
         self.assertIn("com.zelith.integration.FastPearlCatch", mod["entrypoints"]["client"])
@@ -244,6 +247,17 @@ class ArchiveTests(unittest.TestCase):
                 for mixin in config["client"]:
                     source = ROOT / "src" / "main" / "java" / Path(*config["package"].split(".")) / (mixin + ".java")
                     self.assertTrue(source.is_file(), f"Missing mixin source: {source}")
+
+    def test_uploaded_mods_share_1_21_11_mappings_and_metadata(self):
+        archives = (ZELITH_ZIP, ROOT / "async-locator-1.0.3-fabric-loader-0.18-decompiled.zip")
+        mappings = []
+        for archive in archives:
+            with zipfile.ZipFile(archive) as z:
+                original_mod = json.loads(z.read("sources/fabric.mod.json"))
+                self.assertEqual(original_mod["depends"]["minecraft"], "~1.21.11", archive.name)
+                self.assertEqual(original_mod["depends"]["java"], ">=21", archive.name)
+                mappings.append(hashlib.sha256(z.read("mappings-used.tiny")).digest())
+        self.assertEqual(mappings[0], mappings[1], "Uploaded mods must use the same mappings")
 
     def test_preparation_is_reproducible(self):
         generated = ROOT / "build" / "prepared" / "generated"

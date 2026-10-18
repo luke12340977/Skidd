@@ -35,6 +35,8 @@ jobs:
             python3 tools/ci_error.py build-output.log
             exit 1
           fi
+      - name: Verify complete 1.21.11 installable JAR
+        run: python3 tools/verify_installable.py build/libs/zelith-combat-integrated-1.0.0.jar
       - name: Upload installable JAR
         uses: actions/upload-artifact@v4
         with:
