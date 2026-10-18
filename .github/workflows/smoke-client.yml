@@ -1,0 +1,38 @@
+name: Smoke test Minecraft client
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install virtual display
+        run: |
+          command -v xvfb-run || (sudo apt-get update && sudo apt-get install -y xvfb)
+      - name: Prepare named dev client
+        shell: bash
+        run: |
+          ./gradlew classes prepareArchives --no-daemon --console=plain
+          python3 tools/stage_dev_client.py
+      - name: Launch 1.21.11 client and report startup crashes
+        shell: bash
+        run: |
+          set +e
+          timeout --signal=TERM --kill-after=15s 180s \
+            xvfb-run -a -s '-screen 0 1280x720x24' \
+            ./gradlew runClient --no-daemon --console=plain > client-smoke.log 2>&1
+          result=$?
+          set -e
+          tail -n 75 client-smoke.log
+          python3 tools/ci_smoke_error.py client-smoke.log "$result"
