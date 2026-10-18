@@ -20,9 +20,12 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Install virtual display
+      - name: Install virtual display and key injector
         run: |
-          command -v xvfb-run || (sudo apt-get update && sudo apt-get install -y xvfb)
+          if ! command -v xvfb-run || ! command -v xdotool; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb xdotool
+          fi
       - name: Prepare named dev client
         shell: bash
         run: |
@@ -33,8 +36,8 @@ jobs:
         run: |
           set +e
           timeout --signal=TERM --kill-after=15s 180s \
-            xvfb-run -a -s '-screen 0 1280x720x24' \
-            ./gradlew runClient --no-daemon --console=plain > client-smoke.log 2>&1
+            xvfb-run -a -s '-screen 0 1280x720x24' bash tools/smoke_gui.sh \
+            > client-smoke.log 2>&1
           result=$?
           set -e
           tail -n 75 client-smoke.log

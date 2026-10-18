@@ -17,7 +17,10 @@ problems = re.compile(
     r"VerifyError|Crash Report|FAILURE: Build failed|Failed to start the minecraft client",
     re.I,
 )
-failures = [i for i, line in enumerate(lines) if problems.search(line)]
+# A missing optional Linux narrator library (flite) logs a handled stacktrace
+# on headless CI, but is not a mod crash and does not prevent the menu loading.
+failures = [i for i, line in enumerate(lines)
+            if problems.search(line) and "flite" not in line.lower()]
 started = bool(re.search(r"Backend library: LWJGL|Reloading ResourceManager", text, re.I))
 if failures or exit_code not in (0, 124) or not started:
     if failures:
@@ -34,5 +37,9 @@ if failures or exit_code not in (0, 124) or not started:
     encoded = message[:3500].replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
     print("::error title=Minecraft client startup crash::" + encoded)
     raise SystemExit(1)
-print("Minecraft 1.21.11 opened without a reported startup exception "
-      "(timed out at title screen; GUI interactions not verified).")
+if "GUI_KEY_SENT" in text:
+    print("Minecraft 1.21.11 opened without a reported crash after the GUI key was sent "
+          "(visual interaction not verified).")
+else:
+    print("Minecraft 1.21.11 opened without a reported startup crash "
+          "(GUI key injection did not run; GUI interactions not verified).")
