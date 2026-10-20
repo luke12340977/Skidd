@@ -12,7 +12,7 @@ permissions:
 jobs:
   client:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v5
@@ -26,17 +26,15 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y xvfb xdotool
           fi
-      - name: Prepare named dev client
-        shell: bash
-        run: |
-          ./gradlew classes prepareArchives --no-daemon --console=plain
-          python3 tools/stage_dev_client.py
-      - name: Launch 1.21.11 client and report startup crashes
+      - name: Build packaged mod for Minecraft 1.21.11
+        run: ./gradlew build --no-daemon --console=plain
+      - name: Launch packaged JAR and report startup failures
         shell: bash
         run: |
           set +e
-          timeout --signal=TERM --kill-after=15s 180s \
-            xvfb-run -a -s '-screen 0 1280x720x24' bash tools/smoke_gui.sh \
+          timeout --signal=TERM --kill-after=15s 240s \
+            xvfb-run -a -s '-screen 0 1280x720x24' \
+            bash tools/smoke_gui.sh ./gradlew -p smoke-prod runClient --no-daemon --console=plain \
             > client-smoke.log 2>&1
           result=$?
           set -e

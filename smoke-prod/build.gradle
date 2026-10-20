@@ -1,0 +1,31 @@
+// Development launcher used only in CI to try the *packaged* JAR.
+// This project has no Zelith sources or fabric.mod.json of its own; Loom
+// remaps the release JAR from intermediary to named for its dev Minecraft.
+plugins {
+    id 'fabric-loom' version '1.17.12'
+}
+
+def parent = file('..')
+def releaseJar = new File(parent, 'build/libs/zelith-combat-integrated-1.0.0.jar')
+def mappingsJar = new File(parent, 'build/prepared/zelith-mappings.jar')
+if (!releaseJar.exists() || !mappingsJar.exists()) {
+    throw new GradleException('Build the parent project first to produce the installable JAR and mappings')
+}
+
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+    mavenCentral()
+}
+
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.11'
+    mappings files(mappingsJar)
+    modImplementation 'net.fabricmc:fabric-loader:0.19.3'
+    modRuntimeOnly 'net.fabricmc.fabric-api:fabric-api:0.141.6+1.21.11'
+    modRuntimeOnly files(releaseJar)
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}

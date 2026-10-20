@@ -2,6 +2,10 @@
 # Executed inside xvfb-run. Press Right Shift after the title window appears
 # to exercise Zelith's original ClickGUI path, not just the Fabric entrypoint.
 set -u
+if [ "$#" -eq 0 ]; then
+  echo 'Usage: smoke_gui.sh command [args...]' >&2
+  exit 2
+fi
 (
   for attempt in $(seq 1 70); do
     sleep 2
@@ -20,4 +24,4 @@ set -u
     fi
   done
 ) &
-./gradlew runClient --no-daemon --console=plain
+"$@"
